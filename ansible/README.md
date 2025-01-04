@@ -54,3 +54,33 @@ ansible localhost -m ping
 این پینگ گرفتن شبیه پینگ معول که میگیریم نیست. انسیبل میره چک میکنه و به اون ادرسی که مشخص
 کردیم ssh میزنه و اگه اوکی بود به ما پینگ رو برمیگردونه.
 
+برای اجرای دستور ping روی hosts.yml:
+````
+ansible all -i inventory/hosts.yml -m ping
+````
+
+کپی کردن یک فایل از لوکال هاست در نود ها:
+````
+asnible-playbook -i inventory/hosts.yml playbook.yml
+````
+
+## Gather facts
+وقتی ansible به یه هاست ssh میزنه بصورت پیشفرض میره و کلی gather fact میاره که یه سری متغیر هایی هستش که اون
+هاست داره.
+مثلا os اون هاست چیه. میتونیم بیایم بر اساس os فیلتر کنیم که توی اونی که مثلا لینوکسه فلان 
+حرتو بزن روی اونی که ویندوزه فلان حرکت.
+
+از طریق دستور زیر میتونیم gather fact هارو ببینیم:
+````
+ansible localhost -m setup
+````
+
+فیلتر کردن gather fact ها:
+````
+ansible localhost -m setup -a "filter=ansible_os_family"
+````
+
+نکته:
+
+توی کامند ها با -m ماژول رو میدیم و با -a آپشن های ماژول رو میدیم.
+با استفاده از -i میایم inventory رو مشخص می کنیم.

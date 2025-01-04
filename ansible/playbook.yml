@@ -1,0 +1,7 @@
+- name: Copy file to remote hosts
+  hosts: all
+  tasks:
+    - name: Copy a file to the remote host
+      copy:
+        src: ./test.txt
+        dest: ~/test.txt
