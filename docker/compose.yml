@@ -1,0 +1,74 @@
+version: "3.8"
+
+networks:
+  wp_net:
+    name: "wp_net"
+    external: false
+    driver_opts:
+      com.docker.network.bridge.name: wp_net
+
+volumes:
+  wp_data:
+    name: wp_data
+  wp_wp:
+    name: wp_wp
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    hostname: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD:
+        sdfascsdvsfdvweliuoiquowecefcwaefef
+      MYSQL_DATABASE: DockerMe
+      MYSQL_USER: DockerMe
+      MYSQL_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - wp_net
+    volumes:
+      - wp_data:/var/lin/mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    hostname: wordpress
+    volumes:
+      - wp_wp:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: DockerMe
+      WORDPRESS_DB_NAME: DockerMe
+      WORDPRESS_DB_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
+    ports:
+      - 8000:80
+    networks:
+      - wp_net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    hostname: nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      mysql:
+        condition: service_healthy
+      wordpress:
+        condition: service_started
+    networks:
+      - wp_net
+    volumes:
+      - ./nginx/nginx.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
