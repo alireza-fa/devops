@@ -1,0 +1,102 @@
+version: "3.8"
+
+name: "syntax"
+
+# include:
+#   - path: .docker-compose.yml
+#     env_file:
+#       ./ss/ss
+
+networks:
+  main_syntax_network:
+    name: main_syntax_network
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    # attachable: true # this attribute for overlay network driver
+    external: true # when external true, ignoring all this network attributes just name attribute works.
+    internal: true
+    labels:
+      com.syntaxfa.main.network-description: "Network for internal communicate and isolated from outside"
+      com.syntaxfa.main.department: "Backend internal network"
+
+volumes:
+  db_data:
+    name: db_data
+    external: false
+    labels:
+      com.syntaxfa.description: "Database volume"
+      com.syntaxfa.department: "IT/Backend"
+      com.syntaxfa.label-with-empty-value: ""
+#    driver: foobar
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=10.40.0.199,nolock,soft,rw"
+#      device: ":/docker/example"
+
+services:
+  backend:
+    build:
+      context: .
+      target: .
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
+    volumes:
+      - type: bind # type can be (bind, volume, tmpfs ...)
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+      # or we can use shortly command
+#      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - 80:80
+    annotations:
+      com.syntaxfa.name: "nginx image"
+    attach: true
+    labels:
+      com.example.description: "Accounting webapp"
+      com.example.department: "Finance"
+      com.example.label-with-empty-value: ""
+    cpu_count: 8
+    cpu_percent: 20
+    cpu_shares: 8
+    command: nginx -g 'daemon off;'
+    depends_on:
+      backend:
+        restart: false
+        condition: service_started
+#    dns:
+#      - 8.8.8.8
+#      - 9.9.9.9
+#    entrypoint: /code/entrypoint.sh
+#    env_file: # passed to container
+#      - path: ./.env
+#        required: true
+#      - path: ./override.env
+#        required: false
+    environment:
+      RACK_ENV: development
+      SHOW: "true"
+      # ways
+      WITHOUT_DEFAULT: ${VAR}
+      WITH_DEFAULT_ONE: ${VAR:-default} # value of VAR if set and non-empty, otherwise default
+      WITH_DEFAULT_TWO: ${VAR-default} # value of VAR if set, otherwise default
+      REQUIRED_VALUE_ONE: ${VAR:?error} # value of VAR if set and non-empty, otherwise exit with error
+      REQUIRED_VALUE_TWO: ${VAR?error} #  value of VAR if set, otherwise exit with error
+      ALTERNATIVE_VALUE_ONE: ${VAR:+replacement} # if VAR is set and non-empty, otherwise empty
+      ALTERNATIVE_VALUE_TWO: ${VAR+replacement} # replacement if VAR is set, otherwise empty
+      # Also interpolated can be nested like that: ${VARIABLE:-${FOO:-default}}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+    hostname: nginx
+    mem_limit: 300m # can be(300m, 1gb, 300kb, 300k, 2b)
+    env_file:
+      - ./config/.db
+      - ./config/.django
