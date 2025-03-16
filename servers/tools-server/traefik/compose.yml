@@ -11,7 +11,7 @@ services:
     image: traefik:v3.3.4
     restart: ${RESTART_POLICY}
     container_name: traefik-${HOSTNAME}
-    hostname: traefik
+    hostname: ${HOSTNAME}
     command:
       - "--log.level=ERROR"
       - "--log.filepath=/log-file.log"
@@ -56,3 +56,8 @@ services:
       - "traefik.http.routers.traefik-secure.middlewares=web-auth"
       - "traefik.http.routers.traefik-secure.tls.certresolver=mycert"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
